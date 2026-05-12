@@ -8,8 +8,21 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
-    maven { name = "papermc-repo"; url = "https://repo.papermc.io/repository/maven-public/" }
-    maven { name = "spigotmc-repo"; url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
+
+    maven {
+        name = "papermc-repo"
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+
+    maven { 
+        name = "citizens-repo"
+        url = "https://maven.citizensnpcs.co/repo" 
+    }
+    
+    maven {
+        name = "spigotmc-repo"
+        url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
 }
 
 dependencies {
