@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'io.github.goooler.shadow' version '8.1.8'
+}
+
+group = 'com.egor201'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven { name = "papermc-repo"; url = "https://repo.papermc.io/repository/maven-public/" }
+    maven { name = "spigotmc-repo"; url = "https://hub.spigotmc.org/nexus/content/repositories/snapshots/" }
+}
+
+dependencies {
+    compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+    compileOnly 'com.denizenscript:denizen:1.3.1-SNAPSHOT'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'io.undertow:undertow-core:2.3.12.Final'
+    implementation 'com.google.code.gson:gson:2.10.1'
+}
+
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release.set(targetJavaVersion)
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') { expand props }
+}
+
+shadowJar {
+    archiveClassifier.set('')
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
+    relocate 'okhttp3',         'com.egor201.webizen.libs.okhttp3'
+    relocate 'okio',            'com.egor201.webizen.libs.okio'
+    relocate 'io.undertow',     'com.egor201.webizen.libs.undertow'
+    relocate 'org.xnio',        'com.egor201.webizen.libs.xnio'
+    relocate 'com.google.gson', 'com.egor201.webizen.libs.gson'
+}
+
+tasks.build { 
+    dependsOn shadowJar 
+}

@@ -1,0 +1,7 @@
+name: Webizen
+version: '${version}'
+main: com.egor201.webizen.Webizen
+api-version: '1.21'
+depend: [Denizen]
+description: HTTP client and server addon for Denizen scripts.
+authors: [egor201]
