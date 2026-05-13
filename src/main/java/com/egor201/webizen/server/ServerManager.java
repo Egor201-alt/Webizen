@@ -2,7 +2,6 @@ package com.egor201.webizen.server;
 
 import com.egor201.webizen.Webizen;
 import com.egor201.webizen.events.HttpRequestEvent;
-import com.google.gson.Gson;
 import io.undertow.Undertow;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -10,18 +9,16 @@ import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import org.bukkit.Bukkit;
 
-import java.util.Map;
-import java.util.UUID;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServerManager {
 
-    private static final Gson GSON = new Gson();
-
-    private final Map<String, Undertow>         servers         = new ConcurrentHashMap<>();
-    private final Map<String, RouteRegistry>    routes          = new ConcurrentHashMap<>();
-    private final Map<String, MiddlewareRegistry> middlewares   = new ConcurrentHashMap<>();
-    private final Map<String, RequestContext>   pendingRequests = new ConcurrentHashMap<>();
+    private final Map<String, Undertow>           servers         = new ConcurrentHashMap<>();
+    private final Map<String, RouteRegistry>      routes          = new ConcurrentHashMap<>();
+    private final Map<String, MiddlewareRegistry> middlewares     = new ConcurrentHashMap<>();
+    private final Map<String, RequestContext>     pendingRequests = new ConcurrentHashMap<>();
 
     public boolean start(String id, int port) {
         if (servers.containsKey(id)) return false;
@@ -35,7 +32,7 @@ public class ServerManager {
             String path   = exchange.getRequestPath();
 
             exchange.getRequestReceiver().receiveFullBytes((ex, body) -> {
-                String rawBody = new String(body, java.nio.charset.StandardCharsets.UTF_8);
+                String rawBody = new String(body, StandardCharsets.UTF_8);
 
                 RouteRegistry.RouteMatch match = registry.match(method, path);
                 if (match == null) {
@@ -45,40 +42,32 @@ public class ServerManager {
                     return;
                 }
 
-                Map<String, String> headers = new java.util.LinkedHashMap<>();
-                ex.getRequestHeaders().forEach(h ->
-                    h.forEach(v -> headers.put(h.getHeaderName().toString(), v))
-                );
+                Map<String, String> headers = new LinkedHashMap<>();
+                ex.getRequestHeaders().forEach(h -> h.forEach(v -> headers.put(h.getHeaderName().toString(), v)));
 
-                Map<String, String> query = new java.util.LinkedHashMap<>();
+                Map<String, String> query = new LinkedHashMap<>();
                 ex.getQueryParameters().forEach((k, v) -> query.put(k, v.peek()));
 
-                String reqId  = UUID.randomUUID().toString();
-                String ip     = ex.getSourceAddress() != null
+                String reqId = UUID.randomUUID().toString();
+                String ip    = ex.getSourceAddress() != null
                     ? ex.getSourceAddress().getAddress().getHostAddress() : "unknown";
 
-                String middlewareLabel = middlewares.get(id) != null
-                    ? middlewares.get(id).getLabel() : null;
+                String middlewareLabel = middlewares.get(id) != null ? middlewares.get(id).getLabel() : null;
 
-                RequestContext ctx = new RequestContext(
-                    reqId, method, path, match.params(), query,
-                    headers, rawBody, ip, ex, id
-                );
+                RequestContext ctx = new RequestContext(reqId, method, path,
+                    match.params(), query, headers, rawBody, ip, ex, id);
+                ctx.setPendingRouteLabel(match.label());
                 pendingRequests.put(reqId, ctx);
 
                 ex.dispatch();
 
-                if (middlewareLabel != null) {
-                    Bukkit.getScheduler().runTask(Webizen.getInstance(), () ->
-                        HttpRequestEvent.instance.fireFor(reqId, method, path, match.params(),
-                            query, headers, rawBody, ip, id, middlewareLabel, true)
-                    );
-                } else {
-                    Bukkit.getScheduler().runTask(Webizen.getInstance(), () ->
-                        HttpRequestEvent.instance.fireFor(reqId, method, path, match.params(),
-                            query, headers, rawBody, ip, id, match.label(), false)
-                    );
-                }
+                String fireLabel  = middlewareLabel != null ? middlewareLabel : match.label();
+                boolean isMW      = middlewareLabel != null;
+
+                Bukkit.getScheduler().runTask(Webizen.getInstance(), () ->
+                    HttpRequestEvent.instance.fireFor(reqId, method, path, match.params(),
+                        query, headers, rawBody, ip, id, fireLabel, isMW)
+                );
 
                 Bukkit.getScheduler().runTaskLater(Webizen.getInstance(), () -> {
                     RequestContext pending = pendingRequests.remove(reqId);
@@ -91,16 +80,15 @@ public class ServerManager {
             });
         };
 
-        Undertow server = Undertow.builder()
-            .addHttpListener(port, "0.0.0.0", handler)
-            .build();
-
         try {
+            Undertow server = Undertow.builder().addHttpListener(port, "0.0.0.0", handler).build();
             server.start();
             servers.put(id, server);
             return true;
         } catch (Exception e) {
             Webizen.getInstance().getLogger().severe("[Webizen] Failed to start server '" + id + "': " + e.getMessage());
+            routes.remove(id);
+            middlewares.remove(id);
             return false;
         }
     }
@@ -149,23 +137,15 @@ public class ServerManager {
         RequestContext ctx = pendingRequests.remove(reqId);
         if (ctx == null || ctx.isCompleted()) return;
         ctx.markCompleted();
-
         HttpServerExchange ex = ctx.exchange();
         ex.setStatusCode(status);
-        if (headers != null) {
-            headers.forEach((k, v) -> ex.getResponseHeaders().put(new HttpString(k), v));
-        }
-        if (!ex.getResponseHeaders().contains(Headers.CONTENT_TYPE)) {
+        if (headers != null) headers.forEach((k, v) -> ex.getResponseHeaders().put(new HttpString(k), v));
+        if (!ex.getResponseHeaders().contains(Headers.CONTENT_TYPE))
             ex.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-        }
         ex.getResponseSender().send(body != null ? body : "");
     }
 
-    public boolean isRunning(String id) {
-        return servers.containsKey(id);
-    }
-
-    public RouteRegistry getRoutes(String id) {
-        return routes.get(id);
-    }
+    public boolean isRunning(String id)         { return servers.containsKey(id); }
+    public Set<String> getRunningIds()          { return Collections.unmodifiableSet(servers.keySet()); }
+    public RouteRegistry getRoutes(String id)   { return routes.get(id); }
 }

@@ -5,8 +5,7 @@ import com.google.gson.JsonElement;
 import okhttp3.*;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -24,27 +23,18 @@ public class ClientManager {
             .build();
     }
 
-    public void registerClient(String id, HttpClientConfig config) {
-        namedClients.put(id, config);
-    }
-
-    public void removeClient(String id) {
-        namedClients.remove(id);
-    }
-
-    public HttpClientConfig getClient(String id) {
-        return namedClients.get(id);
-    }
+    public void registerClient(String id, HttpClientConfig config) { namedClients.put(id, config); }
+    public void removeClient(String id)                            { namedClients.remove(id); }
+    public HttpClientConfig getClient(String id)                   { return namedClients.get(id); }
+    public Set<String> getClientIds()                              { return Collections.unmodifiableSet(namedClients.keySet()); }
 
     public void sendAsync(String method, String url, String body,
-                          Map<String, String> headers, long timeoutMs,
-                          AsyncCallback callback) {
+                          Map<String, String> headers, long timeoutMs, AsyncCallback callback) {
 
         OkHttpClient client = timeoutMs > 0
             ? defaultClient.newBuilder()
                 .connectTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                .readTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                .build()
+                .readTimeout(timeoutMs, TimeUnit.MILLISECONDS).build()
             : defaultClient;
 
         Request.Builder rb = new Request.Builder().url(url);
@@ -52,18 +42,17 @@ public class ClientManager {
 
         RequestBody requestBody = null;
         if (body != null && !body.isEmpty()) {
-            String ct = headers != null
-                ? headers.getOrDefault("Content-Type", "application/json")
-                : "application/json";
+            String ct = headers != null ? headers.getOrDefault("Content-Type", "application/json") : "application/json";
             requestBody = RequestBody.create(body, MediaType.parse(ct));
         }
+        final RequestBody finalBody = requestBody;
 
         switch (method.toUpperCase()) {
             case "GET"    -> rb.get();
-            case "POST"   -> rb.post(requestBody != null ? requestBody : RequestBody.create(new byte[0]));
-            case "PUT"    -> rb.put(requestBody != null ? requestBody : RequestBody.create(new byte[0]));
-            case "PATCH"  -> rb.patch(requestBody != null ? requestBody : RequestBody.create(new byte[0]));
-            case "DELETE" -> rb.delete(requestBody);
+            case "POST"   -> rb.post(finalBody != null ? finalBody : RequestBody.create(new byte[0]));
+            case "PUT"    -> rb.put(finalBody != null ? finalBody : RequestBody.create(new byte[0]));
+            case "PATCH"  -> rb.patch(finalBody != null ? finalBody : RequestBody.create(new byte[0]));
+            case "DELETE" -> rb.delete(finalBody);
             default       -> rb.get();
         }
 
@@ -88,6 +77,7 @@ public class ClientManager {
         if (headers != null) headers.forEach(rb::addHeader);
         RequestBody requestBody = body != null && !body.isEmpty()
             ? RequestBody.create(body, MediaType.parse("application/json")) : null;
+
         switch (method.toUpperCase()) {
             case "POST"   -> rb.post(requestBody != null ? requestBody : RequestBody.create(new byte[0]));
             case "PUT"    -> rb.put(requestBody != null ? requestBody : RequestBody.create(new byte[0]));
@@ -95,6 +85,7 @@ public class ClientManager {
             case "DELETE" -> rb.delete(requestBody);
             default       -> rb.get();
         }
+
         try (Response response = defaultClient.newCall(rb.build()).execute()) {
             String rawBody = response.body() != null ? response.body().string() : "";
             Map<String, String> respHeaders = new LinkedHashMap<>();
