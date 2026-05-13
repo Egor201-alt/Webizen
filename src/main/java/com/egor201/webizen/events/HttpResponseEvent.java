@@ -4,7 +4,6 @@ import com.denizenscript.denizencore.events.ScriptEvent;
 import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.objects.core.MapTag;
-import com.egor201.webizen.util.JsonUtil;
 
 import java.util.Map;
 
@@ -24,15 +23,21 @@ public class HttpResponseEvent extends ScriptEvent {
     // @Context
     // <context.label>   - the label from http_request
     // <context.status>  - HTTP status code (200, 404...)
-    // <context.body>    - raw response body
-    // <context.json>    - body parsed as MapTag or ListTag if Content-Type is application/json
+    // <context.body>    - raw response body as text
+    // <context.json>    - raw JSON string (same as body, safe to store — use with json_value[path])
     // <context.headers> - MapTag of response headers
     // <context.url>     - the request URL
+    //
+    // @Description
+    // context.json returns the raw JSON body as an ElementTag string.
+    // To extract specific fields use the http_json_value tag:
+    //   <util.as_element[<context.json>].json_value[abilities.0.ability.name]>
+    // Or store it and use http_get-style path extraction.
+    // This avoids crashes caused by Denizen MapTag serialization of URLs and special characters.
     // -->
 
     public static HttpResponseEvent instance;
     private ElementTag label, status, body, url;
-    private ObjectTag json;
     private MapTag headers;
 
     public HttpResponseEvent() {
@@ -43,7 +48,7 @@ public class HttpResponseEvent extends ScriptEvent {
 
     @Override
     public boolean matches(ScriptPath path) {
-        if (!runGenericSwitchCheck(path, "label", label.asString())) return false;
+        if (!runGenericSwitchCheck(path, "label",  label.asString()))  return false;
         if (!runGenericSwitchCheck(path, "status", status.asString())) return false;
         return super.matches(path);
     }
@@ -54,7 +59,7 @@ public class HttpResponseEvent extends ScriptEvent {
             case "label"   -> label;
             case "status"  -> status;
             case "body"    -> body;
-            case "json"    -> json;
+            case "json"    -> body;
             case "headers" -> headers;
             case "url"     -> url;
             default        -> super.getContext(name);
@@ -67,7 +72,6 @@ public class HttpResponseEvent extends ScriptEvent {
         this.status  = new ElementTag(statusCode);
         this.body    = new ElementTag(rawBody != null ? rawBody : "");
         this.url     = new ElementTag(requestUrl != null ? requestUrl : "");
-        this.json    = JsonUtil.toObjectTag(rawBody);
         this.headers = new MapTag();
         if (responseHeaders != null) {
             responseHeaders.forEach((k, v) -> this.headers.putObject(k, new ElementTag(v)));

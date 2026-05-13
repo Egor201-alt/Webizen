@@ -3,7 +3,6 @@ package com.egor201.webizen.events;
 import com.denizenscript.denizencore.events.ScriptEvent;
 import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
-import com.egor201.webizen.util.JsonUtil;
 
 public class HttpWsMessageEvent extends ScriptEvent {
 
@@ -11,16 +10,15 @@ public class HttpWsMessageEvent extends ScriptEvent {
     // @Events
     // http ws message
     // @Group Webizen
-    // @Switch id:<id> to only fire for a specific WebSocket connection id.
+    // @Switch id:<id>
     // @Context
     // <context.id>      - the WebSocket connection ID
     // <context.message> - raw message text
-    // <context.json>    - message parsed as MapTag/ListTag if valid JSON
+    // <context.json>    - same as message — raw JSON string, safe to use with json_value[path]
     // -->
 
     public static HttpWsMessageEvent instance;
     private ElementTag id, message;
-    private ObjectTag json;
 
     public HttpWsMessageEvent() {
         instance = this;
@@ -37,7 +35,7 @@ public class HttpWsMessageEvent extends ScriptEvent {
         return switch (name) {
             case "id"      -> id;
             case "message" -> message;
-            case "json"    -> json;
+            case "json"    -> message;
             default        -> super.getContext(name);
         };
     }
@@ -45,7 +43,6 @@ public class HttpWsMessageEvent extends ScriptEvent {
     public void fireFor(String wsId, String msg) {
         this.id      = new ElementTag(wsId);
         this.message = new ElementTag(msg != null ? msg : "");
-        this.json    = JsonUtil.toObjectTag(msg);
         fire();
     }
 }
