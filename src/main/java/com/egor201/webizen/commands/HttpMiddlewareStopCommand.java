@@ -16,9 +16,6 @@ public class HttpMiddlewareStopCommand extends AbstractCommand {
     // @Maximum 0
     // @Short Stops the middleware chain — request will not reach the route handler.
     // @Group Webizen
-    //
-    // @Description
-    // Use together with http_respond to reject the request from middleware.
     // -->
 
     public HttpMiddlewareStopCommand() {
@@ -32,10 +29,12 @@ public class HttpMiddlewareStopCommand extends AbstractCommand {
 
     @Override
     public void execute(ScriptEntry se) {
-        String reqId = se.getContext() != null
-            ? se.getContext().get("request_id") != null
-                ? se.getContext().get("request_id").toString() : null
-            : null;
+        String reqId = null;
+        try {
+            var def = se.getResidingQueue().getDefinition("request_id");
+            if (def != null) reqId = def.toString();
+        } catch (Exception ignored) {}
+
         if (reqId == null) return;
 
         RequestContext ctx = Webizen.getInstance().getServerManager().getRequest(reqId);

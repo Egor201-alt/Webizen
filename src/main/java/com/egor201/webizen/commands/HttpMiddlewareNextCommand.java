@@ -31,11 +31,12 @@ public class HttpMiddlewareNextCommand extends AbstractCommand {
 
     @Override
     public void execute(ScriptEntry se) {
-        // request_id must be in script context
-        String reqId = se.getContext() != null
-            ? se.getContext().get("request_id") != null
-                ? se.getContext().get("request_id").toString() : null
-            : null;
+        String reqId = null;
+        try {
+            var def = se.getResidingQueue().getDefinition("request_id");
+            if (def != null) reqId = def.toString();
+        } catch (Exception ignored) {}
+
         if (reqId == null) return;
 
         RequestContext ctx = Webizen.getInstance().getServerManager().getRequest(reqId);
