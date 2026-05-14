@@ -7,7 +7,6 @@ import com.denizenscript.denizencore.scripts.commands.AbstractCommand;
 import com.egor201.webizen.Webizen;
 
 public class HttpMiddlewareCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_middleware
     // @Syntax http_middleware [server:<id>] [label:<label>]
@@ -31,7 +30,6 @@ public class HttpMiddlewareCommand extends AbstractCommand {
     //     - stop
     //   - http_middleware_next
     // -->
-
     public HttpMiddlewareCommand() {
         setName("http_middleware");
         setSyntax("http_middleware [server:<id>] [label:<label>]");

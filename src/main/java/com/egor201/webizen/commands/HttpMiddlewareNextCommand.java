@@ -10,36 +10,40 @@ import com.egor201.webizen.server.RequestContext;
 import org.bukkit.Bukkit;
 
 public class HttpMiddlewareNextCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_middleware_next
-    // @Syntax http_middleware_next
-    // @Required 0
-    // @Maximum 0
+    // @Syntax http_middleware_next [request:<request_id>]
+    // @Required 1
+    // @Maximum 1
     // @Short Passes the request from middleware to its matched route handler.
     // @Group Webizen
+    //
+    // @Usage
+    // on http request label:auth_check:
+    //   - if <context.headers.get[X-Api-Key]> != <server.flag[api_key]>:
+    //     - http_respond request:<context.request_id> status:401 body:<map[error=unauthorized].to_json>
+    //     - http_middleware_stop request:<context.request_id>
+    //     - stop
+    //   - http_middleware_next request:<context.request_id>
     // -->
-
     public HttpMiddlewareNextCommand() {
         setName("http_middleware_next");
-        setSyntax("http_middleware_next");
-        setRequiredArguments(0, 0);
+        setSyntax("http_middleware_next [request:<request_id>]");
+        setRequiredArguments(1, 1);
     }
 
     @Override
-    public void parseArgs(ScriptEntry se) throws InvalidArgumentsException {}
+    public void parseArgs(ScriptEntry se) throws InvalidArgumentsException {
+        for (Argument arg : se) {
+            if (!se.hasObject("request") && arg.matchesPrefix("request")) se.addObject("request", arg.asElement());
+            else arg.reportUnhandled();
+        }
+        if (!se.hasObject("request")) throw new InvalidArgumentsException("Must specify request!");
+    }
 
     @Override
     public void execute(ScriptEntry se) {
-        String rawId = null;
-        try {
-            var def = se.getResidingQueue().getDefinition("request_id");
-            if (def != null) rawId = def.toString();
-        } catch (Exception ignored) {}
-
-        if (rawId == null) return;
-
-        final String reqId = rawId;
+        final String reqId = se.getElement("request").asString();
 
         RequestContext ctx = Webizen.getInstance().getServerManager().getRequest(reqId);
         if (ctx == null || ctx.isCompleted()) return;

@@ -5,7 +5,6 @@ import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 
 public class HttpWsOpenEvent extends ScriptEvent {
-
     // <--[event]
     // @Events
     // http ws open
@@ -14,7 +13,6 @@ public class HttpWsOpenEvent extends ScriptEvent {
     // @Context
     // <context.id> - the WebSocket connection ID
     // -->
-
     public static HttpWsOpenEvent instance;
     private ElementTag id;
 

@@ -4,11 +4,9 @@ import com.denizenscript.denizencore.events.ScriptEvent;
 import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 import com.denizenscript.denizencore.objects.core.MapTag;
-
 import java.util.Map;
 
 public class HttpRequestEvent extends ScriptEvent {
-
     // <--[event]
     // @Events
     // http request
@@ -17,19 +15,18 @@ public class HttpRequestEvent extends ScriptEvent {
     // @Switch method:<method>
     // @Switch server:<id>
     // @Context
-    // <context.request_id> - UUID used to send a response via http_respond
-    // <context.method>     - HTTP method (GET, POST...)
-    // <context.path>       - request path (/api/players)
-    // <context.params>     - MapTag of URL path parameters ({uuid} etc.)
-    // <context.query>      - MapTag of query string parameters (?foo=bar)
+    // <context.request_id> - UUID for http_respond / http_middleware_next / http_middleware_stop
+    // <context.method>     - HTTP method
+    // <context.path>       - request path
+    // <context.params>     - MapTag of path parameters
+    // <context.query>      - MapTag of query string parameters
     // <context.headers>    - MapTag of request headers
     // <context.body>       - raw request body
-    // <context.body_json>  - raw JSON body string (same as body, safe — use json_value[path] to extract)
-    // <context.ip>         - client IP address
-    // <context.server>     - the server ID
-    // <context.label>      - the matched route or middleware label
+    // <context.body_json>  - same as body — raw JSON, use http_json_value to extract fields
+    // <context.ip>         - client IP
+    // <context.server>     - server ID
+    // <context.label>      - matched route or middleware label
     // -->
-
     public static HttpRequestEvent instance;
     private ElementTag requestId, method, path, body, ip, server, label;
     private MapTag params, query, headers;
@@ -40,11 +37,11 @@ public class HttpRequestEvent extends ScriptEvent {
         registerSwitches("label", "method", "server");
     }
 
-    @Override public boolean matches(ScriptPath scriptPath) {
-        if (!runGenericSwitchCheck(scriptPath, "label",  label.asString()))  return false;
-        if (!runGenericSwitchCheck(scriptPath, "method", method.asString())) return false;
-        if (!runGenericSwitchCheck(scriptPath, "server", server.asString())) return false;
-        return super.matches(scriptPath);
+    @Override public boolean matches(ScriptPath sp) {
+        if (!runGenericSwitchCheck(sp, "label",  label.asString()))  return false;
+        if (!runGenericSwitchCheck(sp, "method", method.asString())) return false;
+        if (!runGenericSwitchCheck(sp, "server", server.asString())) return false;
+        return super.matches(sp);
     }
 
     @Override public ObjectTag getContext(String name) {
@@ -75,14 +72,12 @@ public class HttpRequestEvent extends ScriptEvent {
         this.ip        = new ElementTag(clientIp != null ? clientIp : "");
         this.server    = new ElementTag(serverId != null ? serverId : "");
         this.label     = new ElementTag(routeLabel != null ? routeLabel : "");
-
-        this.params  = new MapTag();
+        this.params    = new MapTag();
         if (pathParams  != null) pathParams.forEach((k, v)  -> this.params.putObject(k, new ElementTag(v)));
-        this.query   = new MapTag();
+        this.query     = new MapTag();
         if (queryParams != null) queryParams.forEach((k, v) -> this.query.putObject(k, new ElementTag(v)));
-        this.headers = new MapTag();
+        this.headers   = new MapTag();
         if (reqHeaders  != null) reqHeaders.forEach((k, v)  -> this.headers.putObject(k, new ElementTag(v)));
-
         fire();
     }
 }

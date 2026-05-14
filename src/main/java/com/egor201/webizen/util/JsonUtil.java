@@ -1,37 +1,43 @@
 package com.egor201.webizen.util;
 
-import com.denizenscript.denizencore.objects.ObjectTag;
-import com.denizenscript.denizencore.objects.core.ElementTag;
-import com.denizenscript.denizencore.objects.core.ListTag;
-import com.denizenscript.denizencore.objects.core.MapTag;
 import com.google.gson.*;
 
 public class JsonUtil {
-
-    public static ObjectTag toObjectTag(String raw) {
-        if (raw == null || raw.isBlank()) return new ElementTag("");
+    /**
+     * Extracts a value from a JSON string using dot-notation path.
+     * Supports array indices: abilities.0.ability.name
+     * Always returns a plain string — never a Denizen MapTag/ListTag.
+     * This avoids crashes from URLs and special characters in Denizen's serializer.
+     */
+    public static String extractPath(String rawJson, String path) {
+        if (rawJson == null || rawJson.isBlank() || path == null || path.isBlank()) return "";
         try {
-            JsonElement el = JsonParser.parseString(raw);
-            return convert(el);
+            JsonElement current = JsonParser.parseString(rawJson);
+            for (String part : path.split("\\.")) {
+                if (current == null || current.isJsonNull()) return "";
+                if (current.isJsonArray()) {
+                    try {
+                        current = current.getAsJsonArray().get(Integer.parseInt(part));
+                    } catch (Exception e) { return ""; }
+                } else if (current.isJsonObject()) {
+                    current = current.getAsJsonObject().get(part);
+                } else {
+                    return "";
+                }
+            }
+            if (current == null || current.isJsonNull()) return "null";
+            if (current.isJsonPrimitive()) return current.getAsString();
+            return current.toString();
         } catch (Exception e) {
-            return new ElementTag(raw);
+            return "";
         }
     }
 
-    private static ObjectTag convert(JsonElement el) {
-        if (el == null || el.isJsonNull()) return new ElementTag("null");
-        if (el.isJsonPrimitive())          return new ElementTag(el.getAsString());
-        if (el.isJsonArray()) {
-            ListTag list = new ListTag();
-            for (JsonElement item : el.getAsJsonArray()) list.addObject(convert(item));
-            return list;
-        }
-        if (el.isJsonObject()) {
-            MapTag map = new MapTag();
-            for (var entry : el.getAsJsonObject().entrySet())
-                map.putObject(entry.getKey(), convert(entry.getValue()));
-            return map;
-        }
-        return new ElementTag(el.toString());
+    /**
+     * Returns a safe preview of JSON for logging — truncated, no special chars.
+     */
+    public static String preview(String raw, int maxLen) {
+        if (raw == null) return "";
+        return raw.length() > maxLen ? raw.substring(0, maxLen) + "..." : raw;
     }
 }

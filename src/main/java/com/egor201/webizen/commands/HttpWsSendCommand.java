@@ -7,7 +7,6 @@ import com.denizenscript.denizencore.scripts.commands.AbstractCommand;
 import com.egor201.webizen.Webizen;
 
 public class HttpWsSendCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_ws_send
     // @Syntax http_ws_send [id:<id>] [message:<text>] (close:true/false)
@@ -20,7 +19,6 @@ public class HttpWsSendCommand extends AbstractCommand {
     // - http_ws_send id:ws1 message:<map[type=ping].to_json>
     // - http_ws_send id:ws1 message:<map[type=bye].to_json> close:true
     // -->
-
     public HttpWsSendCommand() {
         setName("http_ws_send");
         setSyntax("http_ws_send [id:<id>] [message:<text>] (close:true/false)");

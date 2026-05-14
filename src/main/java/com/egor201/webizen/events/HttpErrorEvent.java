@@ -5,7 +5,6 @@ import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 
 public class HttpErrorEvent extends ScriptEvent {
-
     // <--[event]
     // @Events
     // http error
@@ -21,7 +20,6 @@ public class HttpErrorEvent extends ScriptEvent {
     // <context.error> - the error message
     // <context.url>   - the request URL
     // -->
-
     public static HttpErrorEvent instance;
     private ElementTag label, error, url;
 

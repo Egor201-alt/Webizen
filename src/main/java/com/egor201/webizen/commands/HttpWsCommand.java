@@ -7,7 +7,6 @@ import com.denizenscript.denizencore.scripts.commands.AbstractCommand;
 import com.egor201.webizen.Webizen;
 
 public class HttpWsCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_ws
     // @Syntax http_ws [id:<id>] (url:<url>) (action:connect/disconnect)
@@ -20,7 +19,6 @@ public class HttpWsCommand extends AbstractCommand {
     // - http_ws id:ws1 url:wss://realtime.example.com/events
     // - http_ws id:ws1 action:disconnect
     // -->
-
     public HttpWsCommand() {
         setName("http_ws");
         setSyntax("http_ws [id:<id>] (url:<url>) (action:connect/disconnect)");

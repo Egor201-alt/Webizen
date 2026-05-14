@@ -5,7 +5,6 @@ import com.denizenscript.denizencore.objects.ObjectTag;
 import com.denizenscript.denizencore.objects.core.ElementTag;
 
 public class HttpWsClosedEvent extends ScriptEvent {
-
     // <--[event]
     // @Events
     // http ws closed
@@ -16,7 +15,6 @@ public class HttpWsClosedEvent extends ScriptEvent {
     // <context.code>   - close code (1000 = normal, -1 = error)
     // <context.reason> - close reason or error message
     // -->
-
     public static HttpWsClosedEvent instance;
     private ElementTag id, code, reason;
 

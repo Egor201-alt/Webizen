@@ -11,7 +11,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HttpRespondCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_respond
     // @Syntax http_respond [request:<request_id>] (status:<code>) (body:<text>) (headers:<map>)
@@ -24,7 +23,6 @@ public class HttpRespondCommand extends AbstractCommand {
     // - http_respond request:<context.request_id> status:200 body:<map[players=<server.online_players.parse[name]>].to_json>
     // - http_respond request:<context.request_id> status:404 body:<map[error=not found].to_json>
     // -->
-
     public HttpRespondCommand() {
         setName("http_respond");
         setSyntax("http_respond [request:<request_id>] (status:<code>) (body:<text>) (headers:<map>)");

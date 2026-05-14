@@ -7,7 +7,6 @@ import com.denizenscript.denizencore.scripts.commands.AbstractCommand;
 import com.egor201.webizen.Webizen;
 
 public class HttpStaticCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_static
     // @Syntax http_static [server:<id>] [path:<url_path>] [folder:<folder_path>]
@@ -19,7 +18,6 @@ public class HttpStaticCommand extends AbstractCommand {
     // @Usage
     // - http_static server:api path:/public folder:plugins/Webizen/public
     // -->
-
     public HttpStaticCommand() {
         setName("http_static");
         setSyntax("http_static [server:<id>] [path:<url_path>] [folder:<folder_path>]");

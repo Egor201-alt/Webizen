@@ -12,7 +12,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class HttpClientCommand extends AbstractCommand {
-
     // <--[command]
     // @Name http_client
     // @Syntax http_client [id:<id>] (base_url:<url>) (headers:<map>) (timeout:<ms>)
@@ -24,7 +23,6 @@ public class HttpClientCommand extends AbstractCommand {
     // @Usage
     // - http_client id:myapi base_url:https://api.example.com headers:<map[Authorization=Bearer abc|Content-Type=application/json]> timeout:5000
     // -->
-
     public HttpClientCommand() {
         setName("http_client");
         setSyntax("http_client [id:<id>] (base_url:<url>) (headers:<map>) (timeout:<ms>)");

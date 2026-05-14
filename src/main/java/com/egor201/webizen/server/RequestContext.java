@@ -18,7 +18,6 @@ public class RequestContext {
     private final String serverId;
     private final AtomicBoolean completed = new AtomicBoolean(false);
 
-    // Pending route label for middleware flow
     private String pendingRouteLabel;
 
     public RequestContext(String requestId, String method, String path,
